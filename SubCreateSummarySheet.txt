@@ -1,0 +1,33 @@
+Sub CreateSummarySheet()
+
+On Error GoTo err:
+
+Sheets.Add.Name = "Summary"
+
+On Error GoTo 0
+
+With ActiveSheet
+    .Range("A1").Value2 = 2016
+    .Range("F1").Value2 = 2015
+    .Range("K1").Value2 = 2014
+    .Range("B2,G2,L2,A7,F7,K7").Value2 = "Ticker"
+    .Range("C2,H2,M2").Value2 = "Value"
+    .Range("A3,F3,K3").Value2 = "Greatest % Increase"
+    .Range("A4,F4,K4").Value2 = "Greatest % Decrease"
+    .Range("A5,F5,K5").Value2 = "Greatest Total Volume"
+    .Range("B7,G7,L7").Value2 = "Yearly Change"
+    .Range("C7,H7,M7").Value2 = "Percent Change"
+    .Range("D7,I7,N7").Value2 = "Total Stock Volume"
+End With
+    
+Exit Sub
+
+err:
+
+Application.DisplayAlerts = False
+ActiveSheet.Delete
+Application.DisplayAlerts = True
+
+MsgBox "Summary already created!"
+
+End Sub

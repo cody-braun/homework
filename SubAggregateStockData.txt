@@ -1,0 +1,128 @@
+Sub AggregateStockData()
+
+'Declare Variables
+Dim ws_summary As Worksheet
+Dim ws_active As Worksheet
+Dim int_tablecol As Integer
+Dim int_tablerow As Integer
+Dim lng_datarow As Long
+Dim dbl_openprice As Double
+Dim dbl_total As Double
+Dim str_pctinc As String
+Dim str_pctdec As String
+Dim str_volume As String
+Dim dbl_pctinc As Double
+Dim dbl_pctdec As Double
+Dim dbl_volume As Double
+
+'turn off calculations and screen updating
+Application.Calculation = xlCalculationManual
+Application.ScreenUpdating = False
+
+'initialize "Summary" worksheet variable
+Set ws_summary = ThisWorkbook.Sheets("Summary")
+
+'loop through three tables on "Summary" sheet
+For int_tablecol = 1 To 11 Step 5
+
+    'activate sheet corresponding to current table
+    ThisWorkbook.Sheets(CStr(ws_summary.Cells(1, int_tablecol).Value2)).Activate
+    
+    'set temp sheet variable
+    Set ws_active = ActiveSheet
+    
+    'initialize/reset table row counter
+    int_tablerow = 8
+    
+    'initialize/reset data row counter
+    lng_datarow = 2
+    
+    'initialize/reset total variable
+    dbl_total = 0
+    
+    'initialize first open price
+    dbl_openprice = ws_active.Cells(lng_datarow, 3).Value2
+    
+    'initialize summary stat variables
+    str_pctinc = ""
+    str_pctdec = ""
+    str_volume = ""
+    dbl_pctinc = 0
+    dbl_pctdec = 0
+    dbl_volume = 0
+    
+    'loop through all rows of data
+    While Not IsEmpty(ws_active.Cells(lng_datarow, 1))
+        
+        'add current row vol to total
+        dbl_total = dbl_total + ws_active.Cells(lng_datarow, 7).Value2
+    
+        'check if next row ticker is not equal to current row ticker
+        If ws_active.Cells(lng_datarow, 1) <> ws_active.Cells(lng_datarow + 1, 1) Then
+            
+            'add ticker to table
+            ws_summary.Cells(int_tablerow, int_tablecol).Value2 = ws_active.Cells(lng_datarow, 1).Value2
+            
+            'add yearly change to table
+            ws_summary.Cells(int_tablerow, int_tablecol + 1).Value2 = ws_active.Cells(lng_datarow, 6).Value2 - dbl_openprice
+            
+            'format yearly change
+            If ws_summary.Cells(int_tablerow, int_tablecol + 1).Value2 < 0 Then
+                ws_summary.Cells(int_tablerow, int_tablecol + 1).Interior.ColorIndex = 3
+            Else
+                ws_summary.Cells(int_tablerow, int_tablecol + 1).Interior.ColorIndex = 4
+            End If
+            
+            'add percent change to table if open price > 0
+            If dbl_openprice > 0 Then ws_summary.Cells(int_tablerow, int_tablecol + 2).Value2 = (ws_active.Cells(lng_datarow, 6).Value2 - dbl_openprice) / dbl_openprice
+            
+            'add total to table
+            ws_summary.Cells(int_tablerow, int_tablecol + 3).Value2 = dbl_total
+            
+            'check if summary stats need to be updated
+            If dbl_pctinc < ws_summary.Cells(int_tablerow, int_tablecol + 2).Value2 Then
+                str_pctinc = ws_summary.Cells(int_tablerow, int_tablecol).Value2
+                dbl_pctinc = ws_summary.Cells(int_tablerow, int_tablecol + 2).Value2
+            End If
+            
+            If dbl_pctdec > ws_summary.Cells(int_tablerow, int_tablecol + 2).Value2 Then
+                str_pctdec = ws_summary.Cells(int_tablerow, int_tablecol).Value2
+                dbl_pctdec = ws_summary.Cells(int_tablerow, int_tablecol + 2).Value2
+            End If
+            
+            If dbl_volume < ws_summary.Cells(int_tablerow, int_tablecol + 3).Value2 Then
+                str_volume = ws_summary.Cells(int_tablerow, int_tablecol).Value2
+                dbl_volume = ws_summary.Cells(int_tablerow, int_tablecol + 3).Value2
+            End If
+            
+            'reset variables
+            dbl_total = 0
+            dbl_openprice = ws_active.Cells(lng_datarow + 1, 3).Value2
+            
+            'increment table row
+            int_tablerow = int_tablerow + 1
+        
+        End If
+    
+        lng_datarow = lng_datarow + 1
+    Wend
+    
+    'write summary stats
+    With ws_summary
+        .Cells(3, int_tablecol + 1).Value2 = str_pctinc
+        .Cells(3, int_tablecol + 2).Value2 = dbl_pctinc
+        .Cells(4, int_tablecol + 1).Value2 = str_pctdec
+        .Cells(4, int_tablecol + 2).Value2 = dbl_pctdec
+        .Cells(5, int_tablecol + 1).Value2 = str_volume
+        .Cells(5, int_tablecol + 2).Value2 = dbl_volume
+    End With
+        
+    
+Next int_tablecol
+
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+
+ws_summary.Activate
+
+End Sub
